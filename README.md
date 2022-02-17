@@ -1,1 +1,1 @@
-# add-label-to-issue
+# add-label-to-issue-action
