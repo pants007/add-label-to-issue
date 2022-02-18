@@ -78,12 +78,13 @@ async function addLabels(){
         repo: repoName
       });
       console.log(projectsInfo);
-      const projectNamesAndIds = projectsInfo.map(project => [project.name, project.id]);
+      const projectNamesAndIds = projectsInfo.data.map(project => [project.name, project.id]);
       //only support assigning issue to single project
       const correctProjectNameAndId = projectNamesAndIds.find(item => item[0] === projectTokens[0]);
       if (!(correctProjectNameAndId === undefined)){
         var projectColumns = await octokit.rest.projects.listColumns({project_id:projectNameAndId[1]});
-        const columnNamesAndIds = projectColumns.map(column => [column.name, column.id]);
+        console.log(projectColumns);
+        const columnNamesAndIds = projectColumns.data.map(column => [column.name, column.id]);
         const todoColumn = columnNamesAndIds.find(item => item[0] === 'To do');
 
         await octokit.rest.projects.createCard({
