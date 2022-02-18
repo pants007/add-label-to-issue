@@ -59,7 +59,10 @@ async function addLabels(){
       repository_id: repoId,
       q:`${labelTokens.join('+')}&repository_id=${repoId}`
     })
-    console.log(repoLabels.data);
+
+    //Check if the extracted tokens are valid labels in the repo
+    //Only add the valid labels, as we otherwise end up
+    //creating new labels unintentionally
     labelsToAdd = [];
     for(let repoLabel of repoLabels.data.items){
       if (labelTokens.includes(repoLabel.name)){
@@ -107,13 +110,15 @@ async function addLabels(){
     console.log(projectColumns);
     const column = projectColumns.data.find(column => column.name === 'To do');
 
-    await octokit.rest.projects.createCard({
+    var cardResponse = await octokit.rest.projects.createCard({
         column_id:column.id,
         note:newTitle.trim(),
         content_id:updatedIssue.id,
         content_type:updatedIssue.content_type
       }
-    )
+    );
+
+    console.log(cardResponse);
 
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
