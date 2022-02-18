@@ -116,7 +116,7 @@ async function addLabels(){
       }
     );
 
-    console.log(`The retrieved issue is:\n ${updatedIssue.data}`);
+    console.log(`The retrieved issue is:\n ${updatedIssue.data.id}`);
     console.log(`The card is created with \n
     column_id = ${column.id}\n
     note = ${newTitle.trim()}\n
