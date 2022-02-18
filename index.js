@@ -26,44 +26,54 @@ function findItems(str, key, delim, seqDelim){
     retDict.tokens = tokens;
     return retDict;
 }
-try {
-  // `who-to-greet` input defined in action metadata file
-  const myToken = core.getInput('repo-token');
-  const issueTitle = core.getInput('issue-title');
-  const issueNumber = core.getInput('issue-number');
-  const repoName = github.context.payload.repository.name;
-  const ownerName = github.context.payload.repository.owner.login;
-  const octokit = github.getOctokit(myToken);
-  
-  const labelTokens = findItems(issueTitle, 'labels', ',', ';').tokens;
-  const projectTokens = findItems(issueTitle, 'projects', ',', ';').tokens;
-  
-  //check if issue has changed since the action started
-  var updatedIssue = await octokit.issues.get({
-    owner: ownerName,
-    repo: repoName,
-    issue_number: issueNumber
-  });
 
-  let currentLabels = updatedIssue.data.labels.map(label => label.name);
-
-  if(currentLabels.length > 0){
-    return "Labels have been added since job started, not doing anything"
-  }
-  // for (let labelToken of labelTokens){
-  //   currentLabels.push(labelToken);
-  // }
-  await octokit.issues.update({
-    owner: ownerName,
-    repo: repoName,
-    issue_number: issueNumber,
-    labels: labelTokens
-  });
-
-  return `Updated labels in ${issueNumber}. Added: ${labelsToAdd}. Removed: ${labelsToRemove}.`;
+async function addLabels(){
+    // `who-to-greet` input defined in action metadata file
+    const myToken = core.getInput('repo-token');
+    const issueTitle = core.getInput('issue-title');
+    const issueNumber = core.getInput('issue-number');
+    const repoName = github.context.payload.repository.name;
+    const ownerName = github.context.payload.repository.owner.login;
+    const octokit = github.getOctokit(myToken);
+    
+    const labelTokens = findItems(issueTitle, 'labels', ',', ';').tokens;
+    const projectTokens = findItems(issueTitle, 'projects', ',', ';').tokens;
+    
+    //check if issue has changed since the action started
+    var updatedIssue = await octokit.issues.get({
+      owner: ownerName,
+      repo: repoName,
+      issue_number: issueNumber
+    });
   
-
+    let currentLabels = updatedIssue.data.labels.map(label => label.name);
   
-} catch (error) {
-  core.setFailed(error.message);
+    if(currentLabels.length > 0){
+      return "Labels have been added since job started, not doing anything"
+    }
+    // for (let labelToken of labelTokens){
+    //   currentLabels.push(labelToken);
+    // }
+    await octokit.issues.update({
+      owner: ownerName,
+      repo: repoName,
+      issue_number: issueNumber,
+      labels: labelTokens
+    });
+  
+    return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
+
+addLabels().then(
+  result => {
+    // eslint-disable-next-line no-console
+    console.log(result);
+  },
+  err => {
+    // eslint-disable-next-line no-console
+    console.log(err);
+  }
+)
+.then(() => {
+  process.exit();
+});
