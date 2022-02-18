@@ -4,15 +4,12 @@ inputs:
   issue-number:
     description: 'The issue that needs labels added'
     default: ${{github.event.issue.number}}
-    required: true
   issue-title:
     description: 'The string containing the label description'
     default: ${{github.event.issue.title}}
-    required: true
   repo-token:
     description: 'The github authentication token'
     default: ${{github.token}}
-    required: true
 outputs:
   time: # id of output
     description: 'The time the action was executed'
