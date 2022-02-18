@@ -40,7 +40,7 @@ async function addLabels(){
     const projectTokens = findItems(issueTitle, 'projects', ',', ';').tokens;
     
     //check if issue has changed since the action started
-    var updatedIssue = await octokit.issues.get({
+    var updatedIssue = await octokit.rest.issues.get({
       owner: ownerName,
       repo: repoName,
       issue_number: issueNumber
@@ -54,7 +54,7 @@ async function addLabels(){
     // for (let labelToken of labelTokens){
     //   currentLabels.push(labelToken);
     // }
-    await octokit.issues.update({
+    await octokit.rest.issues.update({
       owner: ownerName,
       repo: repoName,
       issue_number: issueNumber,
