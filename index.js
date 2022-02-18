@@ -111,8 +111,8 @@ async function addLabels(){
     var cardResponse = await octokit.rest.projects.createCard({
         column_id:column.id,
         note:newTitle.trim(),
-        content_id:updatedIssue.id,
-        content_type:updatedIssue.content_type
+        content_id:updatedIssue.data.id,
+        content_type:'Issue'
       }
     );
 
@@ -120,7 +120,7 @@ async function addLabels(){
     console.log(`The card is created with \n
     column_id = ${column.id}\n
     note = ${newTitle.trim()}\n
-    content_id = ${updatedIssue.id}\n
+    content_id = ${updatedIssue.data.id}\n
     content_type = ${updatedIssue.content_type}`);
 
     console.log(`This is the github response from creating the card: \n${cardResponse}`);
