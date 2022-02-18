@@ -77,8 +77,13 @@ async function addLabels(){
         owner: ownerName,
         repo: repoName
       });
-      console.log(projectsInfo);
+      var projInfos = await octokit.paginate(octokit.rest.listforRepo({
+        owner: ownerName,
+        repo: repoName
+      }));
+      console.log(projInfos);
       const projectNamesAndIds = projectsInfo.data.map(project => [project.name, project.id]);
+      
       //only support assigning issue to single project
       const correctProjectNameAndId = projectNamesAndIds.find(item => item[0] === projectTokens[0]);
       if (!(correctProjectNameAndId === undefined)){
