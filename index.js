@@ -61,7 +61,7 @@ async function addLabels(){
     })
     console.log(repoLabels.data);
     labelsToAdd = [];
-    for(let repoLabel of repoLabels){
+    for(let repoLabel of repoLabels.data.items){
       if (labelTokens.includes(repoLabel.name)){
         labelsToAdd.push(repoLabel.name);
       }
