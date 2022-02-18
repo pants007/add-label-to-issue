@@ -36,7 +36,10 @@ async function addLabels(){
     const ownerName = github.context.payload.repository.owner.login;
     const octokit = github.getOctokit(myToken);
     
-    const labelTokens = findItems(issueTitle, 'labels', ',', ';').tokens;
+    const labelStringAndTokens = findItems(issueTitle, 'labels', ',', ';');
+    const labelTokens = labelStringAndTokens.tokens;
+    const labelSubstring = labelStringAndTokens.string;
+    const newTitle = issueTitle.replace(labelSubstring, '');
     const projectTokens = findItems(issueTitle, 'projects', ',', ';').tokens;
     
     //check if issue has changed since the action started
@@ -51,13 +54,12 @@ async function addLabels(){
     if(currentLabels.length > 0){
       return "Labels have been added since job started, not doing anything"
     }
-    // for (let labelToken of labelTokens){
-    //   currentLabels.push(labelToken);
-    // }
+
     await octokit.rest.issues.update({
       owner: ownerName,
       repo: repoName,
       issue_number: issueNumber,
+      title: newTitle,
       labels: labelTokens
     });
   
