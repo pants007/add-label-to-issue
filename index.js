@@ -77,7 +77,7 @@ async function addLabels(){
         owner: ownerName,
         repo: repoName
       });
-      
+      console.log(projectsInfo);
       const projectNamesAndIds = projectsInfo.map(project => [project.name, project.id]);
       //only support assigning issue to single project
       const correctProjectNameAndId = projectNamesAndIds.find(item => item[0] === projectTokens[0]);
