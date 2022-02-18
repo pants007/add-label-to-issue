@@ -33,6 +33,7 @@ async function addLabels(){
     const issueTitle = core.getInput('issue-title');
     const issueNumber = core.getInput('issue-number');
     const repoName = github.context.payload.repository.name;
+    const repoId = github.context.payload.repository.id;
     const ownerName = github.context.payload.repository.owner.login;
     const octokit = github.getOctokit(myToken);
     
@@ -50,51 +51,63 @@ async function addLabels(){
     const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
     
     
-    if (labelTokens.length > 0){
-      //check if issue has changed since the action started
-      var updatedIssue = await octokit.rest.issues.get({
-        owner: ownerName,
-        repo: repoName,
-        issue_number: issueNumber
-      });
-
-      let currentLabels = updatedIssue.data.labels.map(label => label.name);
-      if(currentLabels.length > 0){
-        return "Labels have been added since job started, not doing anything"
-      }
-
-      await octokit.rest.issues.update({
-        owner: ownerName,
-        repo: repoName,
-        issue_number: issueNumber,
-        title: newTitle.trim(),
-        labels: labelTokens
-      });
+    if (labelTokens.length < 1){
+      throw 'No labels were found. Not doing anything'
     }
+
+    var repoLabels = octokit.rest.search.labels({
+      repository_id: repoId,
+      q:`q=${labelTokens.join('+')}&repository_id=${repoId}`
+    })
+    console.log(repoLabels.map(label => label.name));
+    //check if issue has changed since the action started
+    var updatedIssue = await octokit.rest.issues.get({
+      owner: ownerName,
+      repo: repoName,
+      issue_number: issueNumber
+    });
+
+    console.log(updatedIssue);
+
+    let currentLabels = updatedIssue.data.labels.map(label => label.name);
+    if(currentLabels.length > 0){
+      return "Labels have been added since job started, not doing anything"
+    }
+
+    await octokit.rest.issues.update({
+      owner: ownerName,
+      repo: repoName,
+      issue_number: issueNumber,
+      title: newTitle.trim(),
+      labels: labelTokens
+    });
     
-    if (projectTokens.length > 0){
-      var projectsInfo = await octokit.rest.projects.listForRepo({
-        owner: ownerName,
-        repo: repoName
-      });
-
-      const project = projectsInfo.data.find(project => project.name === projectTokens[0]);
-      
-      //only support assigning issue to single project
-      if (!(project === undefined)){
-        var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
-        console.log(projectColumns);
-        const column = projectColumns.data.find(column => column.name === 'To do');
-
-        await octokit.rest.projects.createCard({
-            column_id:column.id,
-            note:newTitle.trim(),
-            content_id:updatedIssue.id,
-            content_type:updatedIssue.content_type
-          }
-        )
-      }
+    
+    if (projectTokens.length > 1){
+      throw 'An issue can only be assigned to a single project!';
     }
+
+    var projectsInfo = await octokit.rest.projects.listForRepo({
+      owner: ownerName,
+      repo: repoName
+    });
+
+    //only support assigning issue to single project
+    const project = projectsInfo.data.find(project => project.name === projectTokens[0]);
+    if (project === undefined){
+      throw `Project \'${projectTokens[0]}\' does not exist in ${ownerName}/${repoName}.`
+    }
+    var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
+    console.log(projectColumns);
+    const column = projectColumns.data.find(column => column.name === 'To do');
+
+    await octokit.rest.projects.createCard({
+        column_id:column.id,
+        note:newTitle.trim(),
+        content_id:updatedIssue.id,
+        content_type:updatedIssue.content_type
+      }
+    )
 
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
