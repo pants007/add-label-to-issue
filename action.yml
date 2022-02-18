@@ -1,6 +1,12 @@
 name: 'Add label to issue'
 description: 'Finds a label in the issue title and adds it'
 inputs:
+  issue-number:
+    description: 'The issue that needs labels added'
+    required: true
+  issue-title:
+    description: 'The string containing the label description'
+    required: true
   repo-token:
     description: 'The github authentication token'
     required: true
