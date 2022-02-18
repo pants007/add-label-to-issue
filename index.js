@@ -23,7 +23,7 @@ function findItems(str, key, delim, seqDelim){
 
     retDict = {};
     retDict.string = str.substring(idx1, idx2+1); //+1 to account for ';'
-    retDict.tokens = tokens;
+    retDict.tokens = tokens.map(token => token.trim());
     return retDict;
 }
 
@@ -114,15 +114,6 @@ async function addLabels(){
         content_type:'Issue'
       }
     );
-
-    console.log(`The retrieved issue is:\n ${updatedIssue.data.content_type}`);
-    console.log(`The card is created with \n
-    column_id = ${column.id}\n
-    note = ${newTitle.trim()}\n
-    content_id = ${updatedIssue.data.id}\n
-    content_type = ${updatedIssue.content_type}`);
-
-    console.log(`This is the github response from creating the card: \n${cardResponse}`);
 
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
