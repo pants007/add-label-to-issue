@@ -58,8 +58,13 @@ async function addLabels(){
     var repoLabels = await octokit.rest.search.labels({
       repository_id: repoId,
       q:`${labelTokens.join('+')}&repository_id=${repoId}`
-    })
-    console.log(repoLabels.data.items);
+    }).data.items
+    labelsToAdd = [];
+    for(let repoLabel of repoLabels){
+      if (labelTokens.includes(repoLabel.name)){
+        labelsToAdd.push(repoLabel.name);
+      }
+    }
     //check if issue has changed since the action started
     var updatedIssue = await octokit.rest.issues.get({
       owner: ownerName,
@@ -79,7 +84,7 @@ async function addLabels(){
       repo: repoName,
       issue_number: issueNumber,
       title: newTitle.trim(),
-      labels: labelTokens
+      labels: labelsToAdd
     });
     
     
