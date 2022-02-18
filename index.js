@@ -59,7 +59,7 @@ async function addLabels(){
       repository_id: repoId,
       q:`q=${labelTokens.join('+')}&repository_id=${repoId}`
     })
-    console.log(repoLabels.items.map(label => label.name));
+    console.log(repoLabels);
     //check if issue has changed since the action started
     var updatedIssue = await octokit.rest.issues.get({
       owner: ownerName,
