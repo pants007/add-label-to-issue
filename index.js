@@ -76,8 +76,6 @@ async function addLabels(){
       issue_number: issueNumber
     });
 
-    console.log(updatedIssue);
-
     let currentLabels = updatedIssue.data.labels.map(label => label.name);
     if(currentLabels.length > 0){
       return "Labels have been added since job started, not doing anything"
@@ -117,8 +115,13 @@ async function addLabels(){
         content_type:updatedIssue.content_type
       }
     );
-
-    console.log(cardResponse);
+    console.log(`The card is created with \n
+    column_id = ${column.id}\n
+    note = ${newTitle.trim()}\n
+    content_id = ${updatedIssue.id}\n
+    content_type = ${updatedIssue.content_type}`);
+    
+    console.log(`This is the github response from creating the card: \n${cardResponse}`);
 
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
