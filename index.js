@@ -5,8 +5,8 @@ function findItems(str, key, delim, seqDelim){
     str = str.toLowerCase();
     if(!str.includes(key)){
         retDict = {};
-        retDict.idxs = [];
-        retDict.items = [];
+        retDict.string = '';
+        retDict.tokens = [];
         return retDict;
     }
     retDict = {};
@@ -38,31 +38,64 @@ async function addLabels(){
     
     const labelStringAndTokens = findItems(issueTitle, 'labels', ',', ';');
     const labelTokens = labelStringAndTokens.tokens;
-    const labelSubstring = labelStringAndTokens.string;
-    const newTitle = issueTitle.replace(labelSubstring, '');
-    const projectTokens = findItems(issueTitle, 'projects', ',', ';').tokens;
     
-    //check if issue has changed since the action started
-    var updatedIssue = await octokit.rest.issues.get({
-      owner: ownerName,
-      repo: repoName,
-      issue_number: issueNumber
-    });
-  
-    let currentLabels = updatedIssue.data.labels.map(label => label.name);
-  
-    if(currentLabels.length > 0){
-      return "Labels have been added since job started, not doing anything"
+    // remove the label substring from the issue title, makes it look better
+    
+    const projectStringAndTokens = findItems(issueTitle, 'projects', ',', ';');
+    const projectTokens = projectStringAndTokens.tokens;
+    
+    const labelSubstring = labelStringAndTokens.string;
+    const projectSubstring = projectStringAndTokens.string;
+    const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
+    const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
+    
+    
+    if (labelTokens.length > 0){
+      //check if issue has changed since the action started
+      var updatedIssue = await octokit.rest.issues.get({
+        owner: ownerName,
+        repo: repoName,
+        issue_number: issueNumber
+      });
+
+      let currentLabels = updatedIssue.data.labels.map(label => label.name);
+      if(currentLabels.length > 0){
+        return "Labels have been added since job started, not doing anything"
+      }
+
+      await octokit.rest.issues.update({
+        owner: ownerName,
+        repo: repoName,
+        issue_number: issueNumber,
+        title: newTitle.trim(),
+        labels: labelTokens
+      });
+    }
+    
+    if (projectTokens.length > 0){
+      var projectsInfo = await octokit.rest.projects.listForRepo({
+        owner: ownerName,
+        repo: repoName
+      });
+      
+      const projectNamesAndIds = projectsInfo.map(project => [project.name, project.id]);
+      //only support assigning issue to single project
+      const correctProjectNameAndId = projectNamesAndIds.find(item => item[0] === projectTokens[0]);
+      if (!(correctProjectNameAndId === undefined)){
+        var projectColumns = await octokit.rest.projects.listColumns({project_id:projectNameAndId[1]});
+        const columnNamesAndIds = projectColumns.map(column => [column.name, column.id]);
+        const todoColumn = columnNamesAndIds.find(item => item[0] === 'To do');
+
+        await octokit.rest.projects.createCard({
+            column_id:todoColumn[1],
+            note:newTitle.trim(),
+            content_id:issueNumber,
+            content_type:'Issue'
+          }
+        )
+      }
     }
 
-    await octokit.rest.issues.update({
-      owner: ownerName,
-      repo: repoName,
-      issue_number: issueNumber,
-      title: newTitle,
-      labels: labelTokens
-    });
-  
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
 }
 
