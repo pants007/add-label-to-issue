@@ -58,7 +58,8 @@ async function addLabels(){
     var repoLabels = await octokit.rest.search.labels({
       repository_id: repoId,
       q:`${labelTokens.join('+')}&repository_id=${repoId}`
-    }).data.items
+    })
+    console.log(repoLabels.data);
     labelsToAdd = [];
     for(let repoLabel of repoLabels){
       if (labelTokens.includes(repoLabel.name)){
