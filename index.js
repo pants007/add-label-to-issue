@@ -115,12 +115,14 @@ async function addLabels(){
         content_type:updatedIssue.content_type
       }
     );
+
+    console.log(`The retrieved issue is:\n ${updatedIssue}`);
     console.log(`The card is created with \n
     column_id = ${column.id}\n
     note = ${newTitle.trim()}\n
     content_id = ${updatedIssue.id}\n
     content_type = ${updatedIssue.content_type}`);
-    
+
     console.log(`This is the github response from creating the card: \n${cardResponse}`);
 
     return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
