@@ -89,8 +89,8 @@ async function addLabels(){
         await octokit.rest.projects.createCard({
             column_id:column.id,
             note:newTitle.trim(),
-            content_id:updatedIssue.data.id,
-            content_type:updatedIssue.data.content_type
+            content_id:updatedIssue.id,
+            content_type:updatedIssue.content_type
           }
         )
       }
