@@ -169,25 +169,23 @@ async function AddLabelsAutomaticProjectAssignment(){
 
   var cardQuery = await octokit.graphql(`
   {
-    query GetProjectCard{
-      repository(owner:"${ownerName}", name:"${repoName}"){
-        projects(first: 5){
-          nodes{
-            columns(first: 3){
-              nodes{
-                name
-                id
-                purpose
-                cards{
-                  nodes{
-                    id
-                    note
-                    state
-                    content{
-                      ... on Issue{
-                        title
-                        number
-                      }
+    repository(owner:"${ownerName}", name:"${repoName}"){
+      projects(first: 5){
+        nodes{
+          columns(first: 3){
+            nodes{
+              name
+              id
+              purpose
+              cards{
+                nodes{
+                  id
+                  note
+                  state
+                  content{
+                    ... on Issue{
+                      title
+                      number
                     }
                   }
                 }
