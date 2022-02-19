@@ -130,10 +130,8 @@ async function AddLabelsAutomaticProjectAssignment(){
     owner:ownerName,
     repo:repoName,
   });
-  console.log(`the repo labels: ${repoLabels}`);
-  console.log(`the repo labels: ${JSON.stringify(repoLabels, undefined, 2)}`);
   labelsToAdd = [];
-  for(let repoLabel of repoLabels){
+  for(let repoLabel of repoLabels.data){
     if (labelTokens.includes(repoLabel.name)){
       labelsToAdd.push(repoLabel.name);
     }
