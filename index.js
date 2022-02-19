@@ -131,7 +131,7 @@ async function AddLabelsAutomaticProjectAssignment(){
     repo:repoName,
   });
   labelsToAdd = [];
-  for(let repoLabel of repoLabels.data.items){
+  for(let repoLabel of repoLabels){
     if (labelTokens.includes(repoLabel.name)){
       labelsToAdd.push(repoLabel.name);
     }
