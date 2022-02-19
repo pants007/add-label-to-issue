@@ -112,7 +112,6 @@ async function AddLabelsAutomaticProjectAssignment(){
   const issueNumber = core.getInput('issue-number');
   const columnName = core.getInput('column-name');
   const repoName = github.context.payload.repository.name;
-  const repoId = github.context.payload.repository.id;
   const ownerName = github.context.payload.repository.owner.login;
   const octokit = github.getOctokit(myToken);
   
@@ -130,7 +129,7 @@ async function AddLabelsAutomaticProjectAssignment(){
     owner:ownerName,
     repo:repoName,
   });
-  labelsToAdd = [];
+  let labelsToAdd = [];
   for(let repoLabel of repoLabels.data){
     if (labelTokens.includes(repoLabel.name)){
       labelsToAdd.push(repoLabel.name);
@@ -144,16 +143,14 @@ async function AddLabelsAutomaticProjectAssignment(){
     issue_number: issueNumber
   });
 
-  const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
-  console.log(`the extracted tokens: ${labelTokens}`);
-  console.log(`the repo labels: ${JSON.stringify(repoLabels, undefined, 2)}`);
-  console.log(`the matching labels in repo labels: ${labelsToAdd}`);
+  const potentialNewLabels = updatedIssue.data.labels.map(label => label.name);
+
   await octokit.rest.issues.update({
     owner: ownerName,
     repo: repoName,
     issue_number: issueNumber,
     title: newTitle.trim(),
-    labels: updatedIssueLabels.concat(labelsToAdd)
+    labels: potentialNewLabels.concat(labelsToAdd)
   });
   core.setOutput('labels-added', labelsToAdd);
 
@@ -161,7 +158,7 @@ async function AddLabelsAutomaticProjectAssignment(){
   let bodyUrl = issueBody.substring(issueBody.search('https'), issueBody.length)
   let projectName = '';
   if (bodyUrl.includes('code')){
-    projectName = 'code';
+    projectName = 'code'; //assume project is named code
   }else if (bodyUrl.includes('report')){
     projectName = 'report'
   }
@@ -170,6 +167,39 @@ async function AddLabelsAutomaticProjectAssignment(){
     repo: repoName
   });
 
+  var cardQuery = await octokit.graphql(`
+  {
+    query GetProjectCard{
+      repository(owner:"${ownerName}", name:"${repoName}"){
+        projects(first: 5){
+          nodes{
+            columns(first: 3){
+              nodes{
+                name
+                id
+                purpose
+                cards{
+                  nodes{
+                    id
+                    note
+                    state
+                    content{
+                      ... on Issue{
+                        title
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }`);
+
+  console.log(cardQuery.data);
   //only support assigning issue to single project
   const project = projectsInfo.data.find(project => project.name === projectName);
 
