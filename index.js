@@ -123,20 +123,20 @@ async function AddLabelsAutomaticProjectAssignment(){
   const labelSubstring = labelStringAndTokens.string;
   const newTitle = issueTitle.replace(labelSubstring, '');
 
+  //Check if the extracted tokens are valid labels in the repo
+  //Only add the valid labels, as we otherwise end up
+  //creating new labels unintentionally
   var repoLabels = await octokit.rest.search.labels({
     repository_id: repoId,
     q:`${labelTokens.join('+')}&repository_id=${repoId}`
   })
-
-  //Check if the extracted tokens are valid labels in the repo
-  //Only add the valid labels, as we otherwise end up
-  //creating new labels unintentionally
   labelsToAdd = [];
   for(let repoLabel of repoLabels.data.items){
     if (labelTokens.includes(repoLabel.name)){
       labelsToAdd.push(repoLabel.name);
     }
   }
+
   //check if issue has changed since the action started
   var updatedIssue = await octokit.rest.issues.get({
     owner: ownerName,
@@ -145,8 +145,9 @@ async function AddLabelsAutomaticProjectAssignment(){
   });
 
   const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
-
-  console.log(updatedIssueLabels.concat(labelsToAdd));
+  console.log(`the extracted tokens: ${labelTokens}`);
+  console.log(`the repo labels: ${repoLabels.data.items.map(item => item.name)}`);
+  console.log(`the matching labels in repo labels: ${labelsToAdd}`);
   await octokit.rest.issues.update({
     owner: ownerName,
     repo: repoName,
