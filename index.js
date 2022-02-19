@@ -47,6 +47,7 @@ async function main(){
     const projectTokens = projectStringAndTokens.tokens;
     
     const labelSubstring = labelStringAndTokens.string;
+    console.log(`${labelSubtring}, ${labelTokens}`);
     const projectSubstring = projectStringAndTokens.string;
     const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
     const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
@@ -132,10 +133,6 @@ async function AddLabelsAutomaticProjectAssignment(){
   const projectSubstring = projectStringAndTokens.string;
   const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
   const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
-
-  if (labelTokens.length < 1){
-    throw 'No labels were found. Not doing anything'
-  }
 
   var repoLabels = await octokit.rest.search.labels({
     repository_id: repoId,
