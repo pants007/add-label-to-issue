@@ -32,6 +32,7 @@ async function addLabels(){
     const myToken = core.getInput('repo-token');
     const issueTitle = core.getInput('issue-title');
     const issueNumber = core.getInput('issue-number');
+    const columnName = core.getInput('column-name');
     const repoName = github.context.payload.repository.name;
     const repoId = github.context.payload.repository.id;
     const ownerName = github.context.payload.repository.owner.login;
@@ -42,7 +43,7 @@ async function addLabels(){
     
     // remove the label substring from the issue title, makes it look better
     
-    const projectStringAndTokens = findItems(issueTitle, 'projects', ',', ';');
+    const projectStringAndTokens = findItems(issueTitle, 'project', ',', ';');
     const projectTokens = projectStringAndTokens.tokens;
     
     const labelSubstring = labelStringAndTokens.string;
@@ -76,11 +77,6 @@ async function addLabels(){
       issue_number: issueNumber
     });
 
-    let currentLabels = updatedIssue.data.labels.map(label => label.name);
-    if(currentLabels.length > 0){
-      return "Labels have been added since job started, not doing anything"
-    }
-
     await octokit.rest.issues.update({
       owner: ownerName,
       repo: repoName,
@@ -88,11 +84,7 @@ async function addLabels(){
       title: newTitle.trim(),
       labels: labelsToAdd
     });
-    
-    
-    if (projectTokens.length > 1){
-      throw 'An issue can only be assigned to a single project!';
-    }
+    core.setOutput('labels-added', labelsToAdd);
 
     var projectsInfo = await octokit.rest.projects.listForRepo({
       owner: ownerName,
@@ -101,21 +93,23 @@ async function addLabels(){
 
     //only support assigning issue to single project
     const project = projectsInfo.data.find(project => project.name === projectTokens[0]);
+
     if (project === undefined){
+      core.setOutput('project-name', 'None');
       throw `Project \'${projectTokens[0]}\' does not exist in ${ownerName}/${repoName}.`
     }
     var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
-    console.log(projectColumns);
-    const column = projectColumns.data.find(column => column.name === 'To do');
+    const column = projectColumns.data.find(column => column.name === columnName);
 
-    var cardResponse = await octokit.rest.projects.createCard({
+    await octokit.rest.projects.createCard({
         column_id:column.id,
         content_id:updatedIssue.data.id,
         content_type:'Issue'
       }
     );
 
-    return `Updated labels in ${issueNumber}. Added: ${labelTokens}.`;
+    core.setOutput('project-name', project.name);
+    return `Updated labels in ${issueNumber}. Added: ${labelTokens}.\n The issue was added to ${project.name} in column ${columnName}`;
 }
 
 addLabels().then(

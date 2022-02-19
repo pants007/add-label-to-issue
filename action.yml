@@ -1,18 +1,23 @@
 name: 'Add label to issue'
-description: 'Finds a label in the issue title and adds it'
+description: 'Finds a label in the issue title and adds it to the issue'
 inputs:
   issue-number:
-    description: 'The issue that needs labels added'
+    description: 'The issue that will be labeled'
     default: ${{github.event.issue.number}}
   issue-title:
-    description: 'The string containing the label description'
+    description: 'The label title string'
     default: ${{github.event.issue.title}}
+  column-name:
+    description: 'The project column in which the issue should be added'
+    default: 'To do'
   repo-token:
-    description: 'The github authentication token'
+    description: 'A github authentication token'
     default: ${{github.token}}
 outputs:
-  time: # id of output
-    description: 'The time the action was executed'
+  labels-added:
+    description: 'The labels that were added to the issue'
+  project-name:
+    description: 'The project to which the issue was added'
 runs:
   using: 'node16'
   main: 'index.js'
