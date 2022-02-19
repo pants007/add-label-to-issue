@@ -146,7 +146,7 @@ async function AddLabelsAutomaticProjectAssignment(){
 
   const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
   console.log(`the extracted tokens: ${labelTokens}`);
-  console.log(`the repo labels: ${repoLabels.data.items.map(item => item.name)}`);
+  console.log(`the repo labels: ${repoLabels.data.items}`);
   console.log(`the matching labels in repo labels: ${labelsToAdd}`);
   await octokit.rest.issues.update({
     owner: ownerName,
