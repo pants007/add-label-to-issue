@@ -126,10 +126,10 @@ async function AddLabelsAutomaticProjectAssignment(){
   //Check if the extracted tokens are valid labels in the repo
   //Only add the valid labels, as we otherwise end up
   //creating new labels unintentionally
-  var repoLabels = await octokit.rest.search.labels({
-    repository_id: repoId,
-    q:`${labelTokens.join('+')}&repository_id=${repoId}`
-  })
+  var repoLabels = await octokit.rest.issues.listLabelsForRepo({
+    ownerName,
+    repoName,
+  });
   labelsToAdd = [];
   for(let repoLabel of repoLabels.data.items){
     if (labelTokens.includes(repoLabel.name)){
