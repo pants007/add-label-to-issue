@@ -28,7 +28,6 @@ function findItems(str, key, delim, seqDelim){
 }
 
 async function main(){
-    // `who-to-greet` input defined in action metadata file
     const myToken = core.getInput('repo-token');
     const issueTitle = core.getInput('issue-title');
     const issueNumber = core.getInput('issue-number');
@@ -42,12 +41,9 @@ async function main(){
     const labelTokens = labelStringAndTokens.tokens;
     
     // remove the label substring from the issue title, makes it look better
-    
     const projectStringAndTokens = findItems(issueTitle, 'project', ',', ';');
     const projectTokens = projectStringAndTokens.tokens;
-    
     const labelSubstring = labelStringAndTokens.string;
-    console.log(`${labelSubstring}, ${labelTokens}`);
     const projectSubstring = projectStringAndTokens.string;
     const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
     const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
@@ -72,7 +68,7 @@ async function main(){
       repo: repoName,
       issue_number: issueNumber
     });
-    
+
     const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
     await octokit.rest.issues.update({
       owner: ownerName,
@@ -105,8 +101,6 @@ async function main(){
       }
     );
 
-    console.log(`${updatedIssue.data.body}`);
-
     core.setOutput('project-name', `${repoName}/projects/${project.name}`);
     return `Added the labels \'${labelsToAdd}\' to issue #${issueNumber}\n
     The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
@@ -121,19 +115,13 @@ async function AddLabelsAutomaticProjectAssignment(){
   const repoId = github.context.payload.repository.id;
   const ownerName = github.context.payload.repository.owner.login;
   const octokit = github.getOctokit(myToken);
-
+  
   const labelStringAndTokens = findItems(issueTitle, 'labels', ',', ';');
   const labelTokens = labelStringAndTokens.tokens;
   
   // remove the label substring from the issue title, makes it look better
-  
-  const projectStringAndTokens = findItems(issueTitle, 'project', ',', ';');
-  const projectTokens = projectStringAndTokens.tokens;
-  
   const labelSubstring = labelStringAndTokens.string;
-  const projectSubstring = projectStringAndTokens.string;
-  const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
-  const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
+  const newTitle = issueTitle.replace(labelSubstring, '');
 
   var repoLabels = await octokit.rest.search.labels({
     repository_id: repoId,
@@ -156,27 +144,35 @@ async function AddLabelsAutomaticProjectAssignment(){
     issue_number: issueNumber
   });
 
+  const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
   await octokit.rest.issues.update({
     owner: ownerName,
     repo: repoName,
     issue_number: issueNumber,
     title: newTitle.trim(),
-    labels: labelsToAdd
+    labels: updatedIssueLabels.concat(labelsToAdd)
   });
   core.setOutput('labels-added', labelsToAdd);
 
+  issueBody = updatedIssue.data.body;
+  bodyUrl = issueBody.substring(issueBody.search('https'), bodyUrl.length)
+  let projectName = '';
+  if (bodyUrl.includes('code')){
+    projectName = 'code';
+  }else if (bodyUrl.includes('report')){
+    projectName = 'report'
+  }
   var projectsInfo = await octokit.rest.projects.listForRepo({
     owner: ownerName,
     repo: repoName
   });
 
   //only support assigning issue to single project
-  
-  const project = projectsInfo.data.find(project => project.name === projectTokens[0]);
+  const project = projectsInfo.data.find(project => project.name === projectName);
 
   if (project === undefined){
     core.setOutput('project-name', 'None');
-    throw `Project \'${projectTokens[0]}\' does not exist in ${ownerName}/${repoName}.`
+    throw `Project \'${projectName}\' does not exist in ${ownerName}/${repoName}.`
   }
   var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
   const column = projectColumns.data.find(column => column.name === columnName);
@@ -188,14 +184,12 @@ async function AddLabelsAutomaticProjectAssignment(){
     }
   );
 
-  console.log(`${updatedIssue.data.body}`);
-
   core.setOutput('project-name', `${repoName}/projects/${project.name}`);
   return `Added the labels \'${labelsToAdd}\' to issue #${issueNumber}\n
   The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
 }
 
-main().then(
+AddLabelsAutomaticProjectAssignment().then(
   result => {
     // eslint-disable-next-line no-console
     console.log(result);
