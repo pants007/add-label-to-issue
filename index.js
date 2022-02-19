@@ -127,8 +127,8 @@ async function AddLabelsAutomaticProjectAssignment(){
   //Only add the valid labels, as we otherwise end up
   //creating new labels unintentionally
   var repoLabels = await octokit.rest.issues.listLabelsForRepo({
-    ownerName,
-    repoName,
+    owner:ownerName,
+    repo:repoName,
   });
   labelsToAdd = [];
   for(let repoLabel of repoLabels.data.items){
