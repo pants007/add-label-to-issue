@@ -108,6 +108,8 @@ async function addLabels(){
       }
     );
 
+    console.log(`${updatedIssue.data.body}`);
+
     core.setOutput('project-name', `${repoName}/projects/${project.name}`);
     return `Added the labels \'${labelsToAdd}\' to issue #${issueNumber}\n
     The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
