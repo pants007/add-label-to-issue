@@ -72,13 +72,14 @@ async function main(){
       repo: repoName,
       issue_number: issueNumber
     });
-
+    
+    const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
     await octokit.rest.issues.update({
       owner: ownerName,
       repo: repoName,
       issue_number: issueNumber,
       title: newTitle.trim(),
-      labels: labelsToAdd
+      labels: updatedIssueLabels.concat(labelsToAdd)
     });
     core.setOutput('labels-added', labelsToAdd);
 
