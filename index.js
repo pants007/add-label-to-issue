@@ -197,7 +197,7 @@ async function AddLabelsAutomaticProjectAssignment(){
     }
   }`);
 
-  console.log(cardQuery);
+  console.log(cardQuery.repository.projects.nodes);
   //only support assigning issue to single project
   const project = projectsInfo.data.find(project => project.name === projectName);
 
