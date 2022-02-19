@@ -155,7 +155,7 @@ async function AddLabelsAutomaticProjectAssignment(){
   core.setOutput('labels-added', labelsToAdd);
 
   let issueBody = updatedIssue.data.body;
-  let bodyUrl = issueBody.substring(issueBody.search('https'), bodyUrl.length)
+  let bodyUrl = issueBody.substring(issueBody.search('https'), issueBody.length)
   let projectName = '';
   if (bodyUrl.includes('code')){
     projectName = 'code';
