@@ -172,16 +172,14 @@ async function AddLabelsAutomaticProjectAssignment(){
     repository(owner:"${ownerName}", name:"${repoName}"){
       projects(first: 5){
         nodes{
+          name
           columns(first: 3){
             nodes{
               name
               id
-              purpose
               cards{
                 nodes{
                   id
-                  note
-                  state
                   content{
                     ... on Issue{
                       title
@@ -197,7 +195,7 @@ async function AddLabelsAutomaticProjectAssignment(){
     }
   }`);
 
-  console.log(JSON.stringify(cardQuery, undefined, 2));
+  console.log(cardQuery.repository.projects.nodes.map(node => node.name));
   //only support assigning issue to single project
   const project = projectsInfo.data.find(project => project.name === projectName);
 
