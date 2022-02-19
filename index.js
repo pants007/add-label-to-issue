@@ -154,8 +154,8 @@ async function AddLabelsAutomaticProjectAssignment(){
   });
   core.setOutput('labels-added', labelsToAdd);
 
-  issueBody = updatedIssue.data.body;
-  bodyUrl = issueBody.substring(issueBody.search('https'), bodyUrl.length)
+  let issueBody = updatedIssue.data.body;
+  let bodyUrl = issueBody.substring(issueBody.search('https'), bodyUrl.length)
   let projectName = '';
   if (bodyUrl.includes('code')){
     projectName = 'code';
