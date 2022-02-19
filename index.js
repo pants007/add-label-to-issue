@@ -47,7 +47,7 @@ async function main(){
     const projectTokens = projectStringAndTokens.tokens;
     
     const labelSubstring = labelStringAndTokens.string;
-    console.log(`${labelSubtring}, ${labelTokens}`);
+    console.log(`${labelSubstring}, ${labelTokens}`);
     const projectSubstring = projectStringAndTokens.string;
     const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
     const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
