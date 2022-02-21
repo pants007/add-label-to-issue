@@ -102,7 +102,7 @@ async function main_graphql(){
     } 
     else if (autoParseProject) {
       const projectNames = core.getInput('auto-parse-project-names').split(',').map(t => t.trim());
-      const issueBody = github.event.issue.body;
+      const issueBody = github.context.payload.issue.body;
       const urlPrefix = `https://github.com/${ownerName}/${repoName}/blob/`;
       const commitHashLength = 41; // don't want to compute or find commit hash, assume length of hash is always 40 characters
       const projectName = projectNames.find(n => {
