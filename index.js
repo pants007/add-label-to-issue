@@ -88,7 +88,7 @@ async function main_graphql(){
     if (parseAssignees) {
       const assigneeData = findItems(issueTitle, '@', ',', ';');
       issueTitle = issueTitle.replace(assigneeData.string, '');
-      validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.name)).map(a => a.id);
+      validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.login)).map(a => a.id);
       console.log(assigneeData.tokens);
       console.log(validAssignees);
     }
@@ -137,9 +137,9 @@ async function main_graphql(){
     var mutationResponse = await octokit.graphql(mutation);
     core.setOutput('column-id', `${columnId}`);
     core.setOutput('labels-added', JSON.stringify(validLabelIds));
-    return `Added the labels ${JSON.stringify(validLabelIds)} to issue #${IssueId}\n
-    Added assignees ${JSON.stringify(validAssignees)} to issue #${IssueId}\n
-  The issue was added to column with id \'${columnId}\'`;
+    return `Added the labels ${JSON.stringify(validLabelIds)} to issue #${issueId}\n
+    Added assignees ${JSON.stringify(validAssignees)} to issue #${issueId}\n
+  The issue was added to ${ownerName}/${repoName}/projects/${projectName} in column with id \'${columnId}\'`;
   } catch (err) {
     console.log(err);
   }
