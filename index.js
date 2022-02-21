@@ -29,7 +29,7 @@ function findItems(str, key, delim, seqDelim){
 
 async function main_graphql(){
   let issueTitle = core.getInput('issue-title');
-  const issueId = core.getInput('issue-number');
+  const issueId = core.getInput('issue-id');
   const columnName = core.getInput('column-name');
   const parseLabels = core.getBooleanInput('parse-labels');
   const parseProject = core.getBooleanInput('parse-project');
