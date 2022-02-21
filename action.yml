@@ -11,16 +11,16 @@ inputs:
     description: 'The project column in which the issue should be added'
     default: 'To do'
   parse-labels:
-    description: 'Determines if the action should parse the title for labels'
+    description: 'Parse title for labels'
     default: true
   parse-project:
-    description: 'Determines if the action should parse the title for a project'
+    description: 'Parse title for project name'
     default: true
   parse-assignees:
-    description: 'Determines if the action should parse the title for assignees'
+    description: 'Parse title for assignees'
     default: true
   auto-parse-project:
-    description: 'Determines if the action should parse the title for a project'
+    description: 'Deduce project from the path to the file referenced in the issue'
     default: false
   auto-parse-project-names:
     description: 'Comma-separated tokens used for automatic project parsing'

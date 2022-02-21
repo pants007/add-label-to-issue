@@ -137,12 +137,7 @@ async function main_graphql(){
   }
 }
 
-
-  
-  
-}
-
-AddLabelsAutomaticProjectAssignment().then(
+main_graphql().then(
   result => {
     // eslint-disable-next-line no-console
     console.log(result);
