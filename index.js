@@ -138,7 +138,7 @@ async function main_graphql(){
     core.setOutput('labels-added', JSON.stringify(validLabelIds));
     return `Added the labels ${JSON.stringify(validLabelIds)} to issue #${IssueId}\n
     Added assignees ${JSON.stringify(validAssignees)} to issue #${IssueId}\n
-  The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
+  The issue was added to column with id \'${columnId}\'`;
   } catch (err) {
     console.log(err);
   }
