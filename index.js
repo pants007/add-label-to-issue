@@ -89,6 +89,7 @@ async function main_graphql(){
       const assigneeData = findItems(issueTitle, '@', ',', ';');
       issueTitle = issueTitle.replace(assigneeData.string, '');
       validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.name)).map(a => a.id);
+      console.log(validAssignees);
     }
     if (parseProject) {
       const projectData = findItems(issueTitle, 'project', ',', ';');
