@@ -126,7 +126,7 @@ async function main_graphql(){
     }
     `
     var mutationResponse = await octokit.graphql(mutation);
-
+    console.log(JSON.stringify(mutationResponse, undefined, 2));
     core.setOutput('project-name', `${repoName}/projects/${project.name}`);
     core.setOutput('labels-added', JSON.stringify(validLabels));
     return `Added the labels ${JSON.stringify(validLabels)} to issue #${IssueId}\n
