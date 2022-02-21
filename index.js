@@ -47,8 +47,10 @@ async function main_graphql(){
         nodes{
           name
           columns(first:10){
-            name
-            id
+            nodes{
+              name
+              id
+            }
           }
         }
       }
