@@ -118,6 +118,9 @@ async function main_graphql(){
 
     const mutation = `
     mutation {
+      updateIssue(input:{id:"${issueId}", title:"${issueTitle}"}){
+        clientMutationId
+      }
       addAssigneesToAssignable(input:{assignableId:"${issueId}", assigneeIds:${JSON.stringify(validAssignees)}}){
         clientMutationId
       }
