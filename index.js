@@ -105,16 +105,16 @@ async function main_graphql(){
       const issueBody = github.context.payload.issue.body;
       const urlPrefix = `https://github.com/${ownerName}/${repoName}/blob/`;
       const commitHashLength = 41; // don't want to compute or find commit hash, assume length of hash is always 40 characters
-      const projectName = projectNames.find(n => {
+      const validProjectName = projectNames.find(n => {
         let url = issueBody.substring(issueBody.search(urlPrefix), issueBody.length);
         let len = urlPrefix.length + commitHashLength;
         let firstFolder = url.substring(len, len+n.length);
         return firstFolder == n;
       });
       //maybe check if projectName is undefined
-      const project = projects.find(proj => proj.name == projectName);
+      const project = projects.find(proj => proj.name == validProjectName);
       const column = project.columns.nodes.find(col => col.name == columnName);
-      projectName = project.name;
+      projectName = validProjectName;
       columnId = column.id;
     }
 
