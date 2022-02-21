@@ -81,17 +81,17 @@ async function main_graphql(){
     let columnId = "";
 
     if (parseLabels) {
-      const labelData = getItems(issueTitle, 'labels', ',', ';');
+      const labelData = findItems(issueTitle, 'labels', ',', ';');
       issueTitle = issueTitle.replace(labelData.string, '');
       validLabels = labels.filter(label => labelData.tokens.includes(label.name));
     } 
     if (parseAssignees) {
-      const assigneeData = getItems(issueTitle, '@', ',', ';');
+      const assigneeData = findItems(issueTitle, '@', ',', ';');
       issueTitle = issueTitle.replace(assigneeData.string, '');
       validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.name));
     }
     if (parseProject) {
-      const projectData = getItems(issueTitle, 'project', ',', ';');
+      const projectData = findItems(issueTitle, 'project', ',', ';');
       issueTitle = issueTitle.replace(projectData.string, '');
       const project = projects.find(proj => proj.name == projectData.tokens[0]);
       const column = project.columns.nodes.find(col => col.name == columnName);
