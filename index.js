@@ -41,26 +41,28 @@ async function main_graphql(){
   const octokit = github.getOctokit(myToken);
 
   const query = `
-  repository(owner: "${ownerName}", name: "${repoName}"){
-    projects(first:10){
-      nodes{
-        name
-        columns(first:10){
+  {
+    repository(owner: "${ownerName}", name: "${repoName}"){
+      projects(first:10){
+        nodes{
+          name
+          columns(first:10){
+            name
+            id
+          }
+        }
+      }
+      labels(first:100){
+        nodes{
           name
           id
         }
       }
-    }
-    labels(first:100){
-      nodes{
-        name
-        id
-      }
-    }
-    assignableUsers(first:100){
-      nodes{
-        login
-        id
+      assignableUsers(first:100){
+        nodes{
+          login
+          id
+        }
       }
     }
   }
