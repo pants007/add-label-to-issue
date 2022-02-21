@@ -27,195 +27,119 @@ function findItems(str, key, delim, seqDelim){
     return retDict;
 }
 
-async function main(){
-    const myToken = core.getInput('repo-token');
-    const issueTitle = core.getInput('issue-title');
-    const issueNumber = core.getInput('issue-number');
-    const columnName = core.getInput('column-name');
-    const repoName = github.context.payload.repository.name;
-    const repoId = github.context.payload.repository.id;
-    const ownerName = github.context.payload.repository.owner.login;
-    const octokit = github.getOctokit(myToken);
-    
-    const labelStringAndTokens = findItems(issueTitle, 'labels', ',', ';');
-    const labelTokens = labelStringAndTokens.tokens;
-    
-    // remove the label substring from the issue title, makes it look better
-    const projectStringAndTokens = findItems(issueTitle, 'project', ',', ';');
-    const projectTokens = projectStringAndTokens.tokens;
-    const labelSubstring = labelStringAndTokens.string;
-    const projectSubstring = projectStringAndTokens.string;
-    const issueTitleWithoutLabels = issueTitle.replace(labelSubstring, '');
-    const newTitle = issueTitleWithoutLabels.replace(projectSubstring, '');
-
-    var repoLabels = await octokit.rest.search.labels({
-      repository_id: repoId,
-      q:`${labelTokens.join('+')}&repository_id=${repoId}`
-    })
-
-    //Check if the extracted tokens are valid labels in the repo
-    //Only add the valid labels, as we otherwise end up
-    //creating new labels unintentionally
-    labelsToAdd = [];
-    for(let repoLabel of repoLabels.data.items){
-      if (labelTokens.includes(repoLabel.name)){
-        labelsToAdd.push(repoLabel.name);
-      }
-    }
-    //check if issue has changed since the action started
-    var updatedIssue = await octokit.rest.issues.get({
-      owner: ownerName,
-      repo: repoName,
-      issue_number: issueNumber
-    });
-
-    const updatedIssueLabels = updatedIssue.data.labels.map(label => label.name);
-    await octokit.rest.issues.update({
-      owner: ownerName,
-      repo: repoName,
-      issue_number: issueNumber,
-      title: newTitle.trim(),
-      labels: updatedIssueLabels.concat(labelsToAdd)
-    });
-    core.setOutput('labels-added', labelsToAdd);
-
-    var projectsInfo = await octokit.rest.projects.listForRepo({
-      owner: ownerName,
-      repo: repoName
-    });
-
-    //only support assigning issue to single project
-    const project = projectsInfo.data.find(project => project.name === projectTokens[0]);
-
-    if (project === undefined){
-      core.setOutput('project-name', 'None');
-      throw `Project \'${projectTokens[0]}\' does not exist in ${ownerName}/${repoName}.`
-    }
-    var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
-    const column = projectColumns.data.find(column => column.name === columnName);
-
-    await octokit.rest.projects.createCard({
-        column_id:column.id,
-        content_id:updatedIssue.data.id,
-        content_type:'Issue'
-      }
-    );
-
-    core.setOutput('project-name', `${repoName}/projects/${project.name}`);
-    return `Added the labels \'${labelsToAdd}\' to issue #${issueNumber}\n
-    The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
-}
-
-async function AddLabelsAutomaticProjectAssignment(){
-  const myToken = core.getInput('repo-token');
-  const issueTitle = core.getInput('issue-title');
-  const issueNumber = core.getInput('issue-number');
+async function main_graphql(){
+  let issueTitle = core.getInput('issue-title');
+  const issueId = core.getInput('issue-number');
   const columnName = core.getInput('column-name');
+  const parseLabels = core.getBooleanInput('parse-labels');
+  const parseProject = core.getBooleanInput('parse-project');
+  const autoParseProject = core.getBooleanInput('auto-parse-project');
+  const parseAssignees = core.getBooleanInput('parse-assignees');
   const repoName = github.context.payload.repository.name;
   const ownerName = github.context.payload.repository.owner.login;
+  const myToken = core.getInput('repo-token');
   const octokit = github.getOctokit(myToken);
-  
-  const labelStringAndTokens = findItems(issueTitle, 'labels', ',', ';');
-  const labelTokens = labelStringAndTokens.tokens;
-  
-  // remove the label substring from the issue title, makes it look better
-  const labelSubstring = labelStringAndTokens.string;
-  const newTitle = issueTitle.replace(labelSubstring, '');
 
-  //Check if the extracted tokens are valid labels in the repo
-  //Only add the valid labels, as we otherwise end up
-  //creating new labels unintentionally
-  var repoLabels = await octokit.rest.issues.listLabelsForRepo({
-    owner:ownerName,
-    repo:repoName,
-  });
-  let labelsToAdd = [];
-  for(let repoLabel of repoLabels.data){
-    if (labelTokens.includes(repoLabel.name)){
-      labelsToAdd.push(repoLabel.name);
-    }
-  }
-
-  //check if issue has changed since the action started
-  var updatedIssue = await octokit.rest.issues.get({
-    owner: ownerName,
-    repo: repoName,
-    issue_number: issueNumber
-  });
-
-  const potentialNewLabels = updatedIssue.data.labels.map(label => label.name);
-
-  await octokit.rest.issues.update({
-    owner: ownerName,
-    repo: repoName,
-    issue_number: issueNumber,
-    title: newTitle.trim(),
-    labels: potentialNewLabels.concat(labelsToAdd)
-  });
-  core.setOutput('labels-added', labelsToAdd);
-
-  let issueBody = updatedIssue.data.body;
-  let bodyUrl = issueBody.substring(issueBody.search('https'), issueBody.length)
-  let projectName = '';
-  if (bodyUrl.includes('code')){
-    projectName = 'code'; //assume project is named code
-  }else if (bodyUrl.includes('report')){
-    projectName = 'report'
-  }
-  var projectsInfo = await octokit.rest.projects.listForRepo({
-    owner: ownerName,
-    repo: repoName
-  });
-
-  var cardQuery = await octokit.graphql(`
-  {
-    repository(owner:"${ownerName}", name:"${repoName}"){
-      projects(first: 5){
-        nodes{
+  const query = `
+  repository(owner: "${ownerName}", name: "${repoName}"){
+    projects(first:10){
+      nodes{
+        name
+        columns(first:10){
           name
-          columns(first: 3){
-            nodes{
-              name
-              id
-              cards{
-                nodes{
-                  id
-                  content{
-                    ... on Issue{
-                      title
-                      number
-                    }
-                  }
-                }
-              }
-            }
-          }
+          id
         }
       }
     }
-  }`);
-
-  console.log(cardQuery.repository.projects.nodes.map(node => node.name));
-  //only support assigning issue to single project
-  const project = projectsInfo.data.find(project => project.name === projectName);
-
-  if (project === undefined){
-    core.setOutput('project-name', 'None');
-    throw `Project \'${projectName}\' does not exist in ${ownerName}/${repoName}.`
-  }
-  var projectColumns = await octokit.rest.projects.listColumns({project_id:project.id});
-  const column = projectColumns.data.find(column => column.name === columnName);
-
-  await octokit.rest.projects.createCard({
-      column_id:column.id,
-      content_id:updatedIssue.data.id,
-      content_type:'Issue'
+    labels(first:100){
+      nodes{
+        name
+        id
+      }
     }
-  );
+    assignableUsers(first:100){
+      nodes{
+        login
+        id
+      }
+    }
+  }
+  `;
+  var response = await octokit.graphql(query);
 
-  core.setOutput('project-name', `${repoName}/projects/${project.name}`);
-  return `Added the labels \'${labelsToAdd}\' to issue #${issueNumber}\n
+  try{
+    const projects = response.repository.projects.nodes;
+    const labels = response.repository.labels.nodes
+    const assignees = response.repository.assignableUsers.nodes;
+    let validLabels = [];
+    let validAssignees = [];
+    let projectName = "";
+    let columnId = "";
+
+    if (parseLabels) {
+      const labelData = getItems(issueTitle, 'labels', ',', ';');
+      issueTitle = issueTitle.replace(labelData.string, '');
+      validLabels = labels.filter(label => labelData.tokens.includes(label.name));
+    } 
+    if (parseAssignees) {
+      const assigneeData = getItems(issueTitle, '@', ',', ';');
+      issueTitle = issueTitle.replace(assigneeData.string, '');
+      validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.name));
+    }
+    if (parseProject) {
+      const projectData = getItems(issueTitle, 'project', ',', ';');
+      issueTitle = issueTitle.replace(projectData.string, '');
+      const project = projects.find(proj => proj.name == projectData.tokens[0]);
+      const column = project.columns.nodes.find(col => col.name == columnName);
+      projectName = project.name;
+      columnId = column.id;
+    } 
+    else if (autoParseProject) {
+      const projectNames = core.getInput('auto-parse-project-names').split(',').map(t => t.trim());
+      const issueBody = github.event.issue.body;
+      const urlPrefix = `https://github.com/${ownerName}/${repoName}/blob/`;
+      const commitHashLength = 41; // don't want to compute or find commit hash, assume length of hash is always 40 characters
+      const projectName = projectNames.find(n => {
+        let url = issueBody.substring(issueBody.search(urlPrefix), issueBody.length);
+        let len = urlPrefix.length + commitHashLength;
+        let firstFolder = url.substring(len, len+n.length);
+        return firstFolder == n;
+      });
+      //maybe check if projectName is undefined
+      const project = projects.find(proj => proj.name == projectName);
+      const column = project.columns.nodes.find(col => col.name == columnName);
+      projectName = project.name;
+      columnId = column.id;
+    }
+
+    const mutation = `
+    mutation {
+      addAssigneesToAssignable(input:{assignableId:"${issueId}", assigneeIds:${JSON.stringify(validAssignees)}}){
+        clientMutationId
+      }
+      addLabelsToLabelable(input:{labelableId:"${issueId}", labelIds:${JSON.stringify(validLabels)}}){
+        clientMutationId
+      }
+      addProjectCard(input:{contentId:"${issueId}", projectColumnId:"${columnId}"}){
+        clientMutationId
+      }
+    }
+    `
+    var mutationResponse = await octokit.graphql(mutation);
+
+    core.setOutput('project-name', `${repoName}/projects/${project.name}`);
+    core.setOutput('labels-added', JSON.stringify(validLabels));
+    return `Added the labels ${JSON.stringify(validLabels)} to issue #${IssueId}\n
+    Added assignees ${JSON.stringify(validAssignees)} to issue #${IssueId}\n
   The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+
+  
+  
 }
 
 AddLabelsAutomaticProjectAssignment().then(

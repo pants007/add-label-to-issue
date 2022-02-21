@@ -1,15 +1,30 @@
 name: 'Add label to issue'
 description: 'Finds a label in the issue title and adds it to the issue'
 inputs:
-  issue-number:
+  issue-id:
     description: 'The issue that will be labeled'
-    default: ${{github.event.issue.number}}
+    default: ${{github.event.issue.node_id}}
   issue-title:
-    description: 'The label title string'
+    description: 'The issue title string'
     default: ${{github.event.issue.title}}
   column-name:
     description: 'The project column in which the issue should be added'
     default: 'To do'
+  parse-labels:
+    description: 'Determines if the action should parse the title for labels'
+    default: true
+  parse-project:
+    description: 'Determines if the action should parse the title for a project'
+    default: true
+  parse-assignees:
+    description: 'Determines if the action should parse the title for assignees'
+    default: true
+  auto-parse-project:
+    description: 'Determines if the action should parse the title for a project'
+    default: false
+  auto-parse-project-names:
+    description: 'Comma-separated tokens used for automatic project parsing'
+    default: 'code, report'
   repo-token:
     description: 'A github authentication token'
     default: ${{github.token}}
