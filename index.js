@@ -75,7 +75,7 @@ async function main_graphql(){
     const projects = response.repository.projects.nodes;
     const labels = response.repository.labels.nodes
     const assignees = response.repository.assignableUsers.nodes;
-    let validLabels = [];
+    let validLabelIds = [];
     let validAssignees = [];
     let projectName = "";
     let columnId = "";
@@ -83,7 +83,7 @@ async function main_graphql(){
     if (parseLabels) {
       const labelData = findItems(issueTitle, 'labels', ',', ';');
       issueTitle = issueTitle.replace(labelData.string, '');
-      validLabels = labels.filter(label => labelData.tokens.includes(label.name));
+      validLabelIds = labels.filter(label => labelData.tokens.includes(label.name)).map(l => l.id);
     } 
     if (parseAssignees) {
       const assigneeData = findItems(issueTitle, '@', ',', ';');
@@ -121,7 +121,7 @@ async function main_graphql(){
       addAssigneesToAssignable(input:{assignableId:"${issueId}", assigneeIds:${JSON.stringify(validAssignees)}}){
         clientMutationId
       }
-      addLabelsToLabelable(input:{labelableId:"${issueId}", labelIds:${JSON.stringify(validLabels)}}){
+      addLabelsToLabelable(input:{labelableId:"${issueId}", labelIds:${JSON.stringify(validLabelIds)}}){
         clientMutationId
       }
       addProjectCard(input:{contentId:"${issueId}", projectColumnId:"${columnId}"}){
@@ -132,8 +132,8 @@ async function main_graphql(){
     var mutationResponse = await octokit.graphql(mutation);
     console.log(JSON.stringify(mutationResponse, undefined, 2));
     core.setOutput('project-name', `${repoName}/projects/${project.name}`);
-    core.setOutput('labels-added', JSON.stringify(validLabels));
-    return `Added the labels ${JSON.stringify(validLabels)} to issue #${IssueId}\n
+    core.setOutput('labels-added', JSON.stringify(validLabelIds));
+    return `Added the labels ${JSON.stringify(validLabelIds)} to issue #${IssueId}\n
     Added assignees ${JSON.stringify(validAssignees)} to issue #${IssueId}\n
   The issue was added to ${repoName}/projects/${project.name} in column \'${columnName}\'`;
   } catch (err) {
