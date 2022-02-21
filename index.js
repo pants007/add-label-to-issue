@@ -89,6 +89,7 @@ async function main_graphql(){
       const assigneeData = findItems(issueTitle, '@', ',', ';');
       issueTitle = issueTitle.replace(assigneeData.string, '');
       validAssignees = assignees.filter(a => assigneeData.tokens.includes(a.name)).map(a => a.id);
+      console.log(assigneeData.tokens);
       console.log(validAssignees);
     }
     if (parseProject) {
@@ -134,8 +135,7 @@ async function main_graphql(){
     }
     `
     var mutationResponse = await octokit.graphql(mutation);
-    console.log(JSON.stringify(mutationResponse, undefined, 2));
-    core.setOutput('project-name', `${repoName}/projects/${project.name}`);
+    core.setOutput('column-id', `${columnId}`);
     core.setOutput('labels-added', JSON.stringify(validLabelIds));
     return `Added the labels ${JSON.stringify(validLabelIds)} to issue #${IssueId}\n
     Added assignees ${JSON.stringify(validAssignees)} to issue #${IssueId}\n
